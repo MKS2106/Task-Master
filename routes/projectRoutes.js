@@ -23,6 +23,8 @@ router.post('/', async(req, res) => {
 
 router.get('/', async(req,res) => {
     try {
+        const currentUser = req.user._id;
+        console.log(currentUser);
         const projects = await Project.find({user: req.user._id}).populate("user", "username").populate("task","title")
         res.status(200).json(projects)
     } catch (error) {
@@ -33,15 +35,15 @@ router.get('/', async(req,res) => {
 
 router.get('/:id', async (req, res) => {
     try {
-        const project = await Project.findById(req.params.id)
+        const project = await Project.findById(req.params.id).populate("task","title")
         if(!project){
-            res.status(404).json({message: "No such project found"})
+            return res.status(404).json({message: "No such project found"})
         }
         if(project.user.toString() !== req.user._id.toString()){
-            res.status(403).json("User is not authorised to access the project information")
+            return res.status(403).json("User is not authorised to access the project information")
         }
-
-        res.status(201).json(project)
+        const populatedProject = await Project.findById(req.params.id).populate("task","title").populate("user", "username")
+        res.status(201).json(populatedProject)
 
     } catch (error) {
          console.error(error)
@@ -54,13 +56,14 @@ router.put('/:id', async (req,res) => {
        const project = await Project.findById(req.params.id) 
 
        if(!project){
-            res.status(404).json({message: "No such project found"})
+           return res.status(404).json({message: "No such project found"})
        }
        if(project.user.toString() !== req.user._id.toString()){
-        res.status(403).json("User is not authorised to update the project information")
+       return res.status(403).json("User is not authorised to update the project information")
        }
 
        const updatedProject = await Project.findByIdAndUpdate(req.params.id, req.body, {new: true})
+
        res.status(201).json(updatedProject);
 
     } catch (error) {
@@ -73,10 +76,10 @@ router.delete('/:id', async (req,res) => {
        const project = await Project.findById(req.params.id) 
 
        if(!project){
-            res.status(404).json({message: "No such project found"})
+           return res.status(404).json({message: "No such project found"})
        }
        if(project.user.toString() !== req.user._id.toString()){
-        res.status(403).json("User is not authorised to delete the project information")
+        return res.status(403).json("User is not authorised to delete the project information")
        }
 
        const deletedProject = await Project.findByIdAndDelete(req.params.id, req.body, {new: true})

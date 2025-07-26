@@ -22,6 +22,11 @@ router.post('/:id/tasks', async(req, res) => {
         const newTask = await Task.create({...req.body, user: req.user._id, project: req.params.id})
         const populatedTask = await newTask.populate("project","name")
         // console.log(newTask)
+
+        project.task.push(newTask._id) // NEWLY ADDED LINE OF CODE TO PUSH THE TASK TO THE PROJECT
+        await project.save();// NEWLY ADDED LINE OF CODE TO PUSH THE TASK TO THE PROJECT
+
+
         res.status(201).json(populatedTask)
     
     } catch (error) {
